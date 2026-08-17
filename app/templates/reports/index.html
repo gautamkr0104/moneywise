@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Reports &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-16">
+  <h1>Reports</h1>
+  <div>
+    <a class="btn btn-secondary" href="{{ url_for('reports.export_transactions', date_from=date_from.isoformat(), date_to=date_to.isoformat()) }}">Export transactions CSV</a>
+    <a class="btn btn-secondary" href="{{ url_for('reports.export_monthly', date_from=date_from.isoformat(), date_to=date_to.isoformat()) }}">Export monthly CSV</a>
+    <a class="btn btn-secondary" href="{{ url_for('reports.export_budgets', year=date_from.year, month=date_from.month) }}">Export budgets CSV</a>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <form method="get">
+    <div class="form-group">
+      {{ form.period.label }}
+      {{ form.period(class="form-control") }}
+    </div>
+    <div class="form-group">
+      {{ form.month.label }}
+      {{ form.month(class="form-control") }}
+    </div>
+    <div class="form-group">
+      {{ form.year.label }}
+      {{ form.year(class="form-control") }}
+    </div>
+    <div class="form-group">
+      {{ form.date_from.label }}
+      {{ form.date_from(class="form-control", type="date") }}
+    </div>
+    <div class="form-group">
+      {{ form.date_to.label }}
+      {{ form.date_to(class="form-control", type="date") }}
+    </div>
+    <div class="form-group">
+      <label>&nbsp;</label>
+      <button class="btn btn-primary" type="submit">Show report</button>
+    </div>
+  </form>
+</div>
+
+<p class="muted mb-16">Period: <strong>{{ label }}</strong></p>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Income</div>
+    <div class="stat-value pos">{{ report.total_income|money(g.current_user.currency) }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Expenses</div>
+    <div class="stat-value neg">{{ report.total_expenses|money(g.current_user.currency) }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Savings</div>
+    <div class="stat-value {% if report.savings >= 0 %}pos{% else %}neg{% endif %}">{{ report.savings|money(g.current_user.currency) }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Savings rate</div>
+    <div class="stat-value">{{ '%.1f'|format(report.savings_rate) ~ '%' if report.savings_rate is not none else 'n/a' }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Avg monthly spending (6 mo)</div>
+    <div class="stat-value">{{ report.average_monthly_spending|money(g.current_user.currency) }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Transactions</div>
+    <div class="stat-value">{{ report.transaction_count }}</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Spending by category</div>
+    {% if report.spending_by_category|length %}
+    <table class="table">
+      <thead><tr><th>Category</th><th class="num">Amount</th><th class="num">% of spending</th></tr></thead>
+      <tbody>
+        {% for name, amount in report.spending_by_category.items() %}
+        <tr>
+          <td>{{ name }}</td>
+          <td class="num amount-expense">{{ amount|money(g.current_user.currency) }}</td>
+          <td class="num">{{ '%.1f'|format(amount / report.total_expenses * 100) if report.total_expenses else '—' }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="muted">No expenses in this period.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-title">Spending by account</div>
+    {% if report.spending_by_account|length %}
+    <table class="table">
+      <thead><tr><th>Account</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+        {% for name, amount in report.spending_by_account.items() %}
+        <tr>
+          <td>{{ name }}</td>
+          <td class="num amount-expense">{{ amount|money(g.current_user.currency) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="muted">No expenses in this period.</p>{% endif %}
+  </div>
+</div>
+
+{% if report.highest_spending_category or report.highest_transaction %}
+<div class="card">
+  <div class="card-title">Highlights</div>
+  <p>
+    {% if report.highest_spending_category %}
+    Highest spending category: <strong>{{ report.highest_spending_category[0] }}</strong> ({{ report.highest_spending_category[1]|money(g.current_user.currency) }})
+    {% endif %}
+  </p>
+  <p>
+    {% if report.highest_transaction %}
+    Largest transaction: <strong>{{ report.highest_transaction[0] }}</strong> ({{ report.highest_transaction[1]|money(g.current_user.currency) }})
+    {% endif %}
+  </p>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-title">Monthly trend (last 6 months)</div>
+  {% if trend|length %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Month</th><th class="num">Income</th><th class="num">Expenses</th><th class="num">Savings</th></tr></thead>
+      <tbody>
+        {% for row in trend|reverse %}
+        <tr>
+          <td>{{ row.month }}</td>
+          <td class="num amount-income">{{ row.income|money(g.current_user.currency) }}</td>
+          <td class="num amount-expense">{{ row.expenses|money(g.current_user.currency) }}</td>
+          <td class="num {% if row.savings >= 0 %}amount-income{% else %}amount-expense{% endif %}">{{ row.savings|money(g.current_user.currency) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p class="muted">Not enough data for a trend yet.</p>{% endif %}
+</div>
+{% endblock %}

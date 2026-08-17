@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Accounts &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-16">
+  <h1>Accounts</h1>
+  <a class="btn btn-primary" href="{{ url_for('accounts.new_account') }}">+ New account</a>
+</div>
+
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th class="num">Starting balance</th>
+        <th class="num">Current balance</th>
+        <th>Currency</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td><a href="{{ url_for('accounts.detail', account_id=row.account.id) }}">{{ row.account.name }}</a></td>
+        <td><span class="badge badge-muted">{{ row.account.type.value|replace('_', ' ') }}</span></td>
+        <td class="num">{{ row.account.starting_balance|money(row.account.currency) }}</td>
+        <td class="num {% if row.balance >= 0 %}amount-income{% else %}amount-expense{% endif %}">{{ row.balance_formatted }}</td>
+        <td>{{ row.account.currency }}</td>
+        <td>
+          {% if row.account.is_archived %}<span class="badge badge-muted">archived</span>{% else %}<span class="badge badge-ok">active</span>{% endif %}
+        </td>
+        <td class="text-right">
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('accounts.edit', account_id=row.account.id) }}">Edit</a>
+          <form class="inline-form" method="post" action="{{ url_for('accounts.archive', account_id=row.account.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-secondary btn-sm" type="submit">{{ 'Restore' if row.account.is_archived else 'Archive' }}</button>
+          </form>
+          <form class="inline-form" method="post" action="{{ url_for('accounts.delete', account_id=row.account.id) }}"
+                onsubmit="return confirm('Delete {{ row.account.name }} and all its transactions?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-danger-outline btn-sm" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty-state">No accounts yet. <a href="{{ url_for('accounts.new_account') }}">Create your first account</a>.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+app/__init__.py
+app/config.py
+app/extensions.py
+moneywise.egg-info/PKG-INFO
+moneywise.egg-info/SOURCES.txt
+moneywise.egg-info/dependency_links.txt
+moneywise.egg-info/requires.txt
+moneywise.egg-info/top_level.txt
+tests/test_app.py

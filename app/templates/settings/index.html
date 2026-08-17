@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Settings &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<h1>Settings</h1>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title">Change password</div>
+    <form method="post">
+      {{ password_form.hidden_tag() }}
+      <div class="form-group">
+        {{ password_form.current_password.label }}
+        {{ password_form.current_password(class="form-control") }}
+        {% for error in password_form.current_password.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+      </div>
+      <div class="form-group">
+        {{ password_form.new_password.label }}
+        {{ password_form.new_password(class="form-control") }}
+        {% for error in password_form.new_password.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+      </div>
+      <div class="form-group">
+        {{ password_form.confirm_password.label }}
+        {{ password_form.confirm_password(class="form-control") }}
+        {% for error in password_form.confirm_password.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+      </div>
+      <button type="submit" class="btn btn-primary">{{ password_form.submit.label.text }}</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Default currency</div>
+    <p class="small muted">Used for new accounts and display formatting.</p>
+    <form method="post" action="{{ url_for('settings.update_currency') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <select name="currency" class="form-control">
+          {% for code, label in currencies %}
+          <option value="{{ code }}" {% if code == g.current_user.currency %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Save currency</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

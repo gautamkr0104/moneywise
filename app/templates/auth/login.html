@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Log in &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1>Log in</h1>
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+      {{ form.identifier.label }}
+      {{ form.identifier(class="form-control", autofocus=true) }}
+      {% for error in form.identifier.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.password.label }}
+      {{ form.password(class="form-control") }}
+      {% for error in form.password.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">{{ form.submit.label.text }}</button>
+  </form>
+  <p class="auth-alt">New here? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
+</div>
+{% endblock %}

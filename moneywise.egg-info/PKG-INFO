@@ -1,0 +1,155 @@
+Metadata-Version: 2.4
+Name: moneywise
+Version: 0.1.0
+Summary: A production-quality personal finance management application built with Flask.
+Author: MoneyWise
+License: MIT
+Keywords: finance,flask,personal-finance,budget
+Classifier: Programming Language :: Python :: 3
+Classifier: Framework :: Flask
+Classifier: Environment :: Web Environment
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.13
+Description-Content-Type: text/markdown
+Requires-Dist: Flask<4,>=3.1
+Requires-Dist: Flask-SQLAlchemy<4,>=3.1
+Requires-Dist: Flask-Migrate<5,>=4.0
+Requires-Dist: Flask-WTF<2,>=1.2
+Requires-Dist: WTForms<4,>=3.1
+Requires-Dist: pydantic<3,>=2.10
+Requires-Dist: pandas<3,>=2.2
+Requires-Dist: python-dotenv<2,>=1.0
+Provides-Extra: dev
+Requires-Dist: pytest<9,>=8.0; extra == "dev"
+Requires-Dist: pytest-flask<2,>=1.3; extra == "dev"
+Requires-Dist: ruff<1,>=0.9; extra == "dev"
+
+# MoneyWise
+
+A production-quality personal finance management application built with **Python 3.14** and **Flask** only — no Node.js, no JavaScript build system, no non-Python backend. Track income, expenses, budgets, accounts, transactions, recurring payments, and financial statistics, all rendered with server-side Jinja2 templates plus a REST API.
+
+> **Status: Phase 1 of 14 (project setup, application factory, configuration).**
+> The remaining phases (models, auth, accounts, transactions, budgets, dashboard, analytics, CSV import/export, recurring transactions, REST API, security, testing, docs) are built incrementally on top of this foundation.
+
+## Features (planned)
+
+- User registration / login / logout with secure password hashing and session auth
+- Accounts (cash, bank, savings, credit card, investment) with running balances
+- Transactions (income / expense / transfer) with search, filter, sort, pagination
+- Custom categories and monthly budgets with progress warnings (50/75/90/100 %)
+- Dashboard with live financial stats computed from the database
+- Pandas-powered financial analytics and downloadable CSV reports
+- CSV import with preview, validation, duplicate detection, and confirmation
+- Recurring transactions processed by a pure-Python service (no Celery/Redis)
+- REST API (`/api/...`) with JSON validation and proper status codes
+- CSRF protection, hardened sessions, safe uploads, and production-safe errors
+
+## Tech stack
+
+| Layer | Choice |
+| --- | --- |
+| Language | Python 3.14.7 (type hints, dataclasses, enums, `decimal.Decimal` for money) |
+| Web framework | Flask 3.x |
+| ORM / migrations | Flask-SQLAlchemy, Flask-Migrate (Alembic) |
+| Forms / validation | Flask-WTF, WTForms, Pydantic |
+| Data analysis | Pandas |
+| Auth | Secure Flask sessions (signed cookies), Werkzeug password hashing |
+| Database | SQLite by default; PostgreSQL-ready via `DATABASE_URL` |
+| Testing | pytest, pytest-flask |
+| Config | python-dotenv, environment-driven config classes |
+
+## Getting started
+
+### 1. Create a virtual environment
+
+```bash
+python -m venv .venv
+```
+
+Activate it:
+
+```bash
+# Windows (Git Bash / cmd)
+.venv/Scripts/activate
+
+# macOS / Linux
+source .venv/bin/activate
+```
+
+### 2. Install dependencies
+
+```bash
+pip install -e ".[dev]"
+```
+
+This installs runtime dependencies plus the dev extras (pytest, pytest-flask, ruff).
+
+### 3. Configure the environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set a strong `SECRET_KEY`:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+### 4. Run the application
+
+```bash
+flask --app run.py run        # or: python run.py
+```
+
+Open http://127.0.0.1:5000 — the `/health` endpoint should return `{"status": "ok"}`.
+
+### 5. Run the tests
+
+```bash
+pytest
+```
+
+### 6. Database migrations
+
+Database initialization and migrations arrive in Phase 2. The planned workflow is:
+
+```bash
+flask --app run.py db init
+flask --app run.py db migrate -m "initial schema"
+flask --app run.py db upgrade
+```
+
+## Project structure
+
+```
+moneywise/
+├── app/
+│   ├── __init__.py        # create_app() application factory
+│   ├── config.py          # Development/Testing/Production config classes
+│   ├── extensions.py      # db, migrate, csrf extension instances
+│   ├── models/            # Phase 2: SQLAlchemy models
+│   ├── routes/            # Phase 3+: web blueprints + REST API
+│   ├── services/          # Phase 5+: business logic
+│   ├── templates/         # Phase 3+: Jinja2 templates
+│   └── static/            # single stylesheet
+├── tests/                 # pytest suite (isolated in-memory DB)
+├── instance/              # local SQLite DB + logs (gitignored)
+├── migrations/            # Phase 2: Alembic migrations
+├── .env.example
+├── .gitignore
+├── pyproject.toml
+├── README.md
+└── run.py
+```
+
+## Security considerations
+
+- Passwords are hashed with Werkzeug's `generate_password_hash` (never stored plaintext).
+- Session cookies are HTTP-only, SameSite=Lax, and marked Secure in production.
+- CSRF protection via Flask-WTF on all state-changing forms.
+- `SECRET_KEY` comes from the environment; production fails fast if unset.
+- Upload size limited (`MAX_CONTENT_LENGTH`), CSV files validated before parsing.
+- Financial amounts use `decimal.Decimal` / `Numeric` — never floats for money.
+
+The full README (API docs, CSV format, deployment notes) is completed in the final phase.

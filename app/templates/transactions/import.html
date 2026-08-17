@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Import transactions &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1>Import transactions from CSV</h1>
+  <p class="muted small">Upload a CSV with columns:
+    <code>date, description, amount, category, type</code> (optional:
+    <code>account, notes</code>).</p>
+  <p class="muted small">Example row:
+    <code>2026-08-01,Salary,50000,Salary,income</code></p>
+  <form method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+      {{ form.file.label }}
+      {{ form.file(class="form-control", accept=".csv,text/csv") }}
+      {% for error in form.file.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">Upload &amp; preview</button>
+  </form>
+  <p class="auth-alt"><a href="{{ url_for('transactions.list_transactions') }}">Back to transactions</a></p>
+</div>
+{% endblock %}

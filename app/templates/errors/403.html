@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Forbidden &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1>403 &middot; Forbidden</h1>
+  <p class="muted">You do not have permission to view this page.</p>
+  <a class="btn btn-primary" href="{{ url_for('dashboard.index') }}">Back to dashboard</a>
+</div>
+{% endblock %}

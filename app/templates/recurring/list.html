@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Recurring &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-16">
+  <h1>Recurring transactions</h1>
+  <div>
+    <form class="inline-form" method="post" action="{{ url_for('recurring.process_due') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-secondary" type="submit">Process due now</button>
+    </form>
+    <a class="btn btn-primary" href="{{ url_for('recurring.new_recurring') }}">+ New recurring</a>
+  </div>
+</div>
+
+<div class="card">
+  <p class="small muted mb-16">
+    Recurring templates are turned into real transactions when their due date
+    arrives. Click <strong>Process due now</strong> to run them, or call
+    <code>flask recurring process</code> from a scheduler.
+  </p>
+  {% if items %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="num">Amount</th>
+          <th>Type</th>
+          <th>Category</th>
+          <th>Account</th>
+          <th>Frequency</th>
+          <th>Next due</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>{{ item.description }}</td>
+          <td class="num">{{ item.amount|money(g.current_user.currency) }}</td>
+          <td><span class="badge badge-{{ item.type.value }}">{{ item.type.value }}</span></td>
+          <td>{{ item.category.name if item.category else '—' }}</td>
+          <td>{{ item.account.name if item.account else '—' }}</td>
+          <td>{{ item.frequency.value }}</td>
+          <td>{{ item.next_due_date|datefmt }}</td>
+          <td>
+            {% if item.is_active %}
+              {% if item.next_due_date <= today %}<span class="badge badge-warn90">due</span>{% else %}<span class="badge badge-ok">active</span>{% endif %}
+            {% else %}<span class="badge badge-muted">inactive</span>{% endif %}
+          </td>
+          <td class="text-right">
+            <a class="btn btn-secondary btn-sm" href="{{ url_for('recurring.edit', recurring_id=item.id) }}">Edit</a>
+            <form class="inline-form" method="post" action="{{ url_for('recurring.delete', recurring_id=item.id) }}"
+                  onsubmit="return confirm('Delete this recurring transaction?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger-outline btn-sm" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No recurring transactions yet. <a href="{{ url_for('recurring.new_recurring') }}">Create one</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

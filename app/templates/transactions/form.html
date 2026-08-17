@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1>{{ title }}</h1>
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+      {{ form.type.label }}
+      {{ form.type(class="form-control", id="txn-type") }}
+      {% for error in form.type.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.description.label }}
+      {{ form.description(class="form-control") }}
+      {% for error in form.description.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        {{ form.amount.label }}
+        {{ form.amount(class="form-control") }}
+        {% for error in form.amount.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+      </div>
+      <div class="form-group">
+        {{ form.date.label }}
+        {{ form.date(class="form-control", type="date") }}
+        {% for error in form.date.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+      </div>
+    </div>
+    <div class="form-group" id="field-account">
+      {{ form.account.label }}
+      {{ form.account(class="form-control") }}
+      {% for error in form.account.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+    </div>
+    <div class="form-group" id="field-to-account">
+      {{ form.to_account.label }}
+      {{ form.to_account(class="form-control") }}
+      {% for error in form.to_account.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+    </div>
+    <div class="form-group" id="field-category">
+      {{ form.category.label }}
+      {{ form.category(class="form-control") }}
+      {% for error in form.category.errors %}<span class="form-error">{{ error }}</span>{% endfor %}
+    </div>
+    <div class="form-group">
+      {{ form.notes.label }}
+      {{ form.notes(class="form-control", rows=3) }}
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">{{ form.submit.label.text }}</button>
+  </form>
+</div>
+
+<script src="{{ url_for('static', filename='transaction_form.js') }}"></script>
+{% endblock %}

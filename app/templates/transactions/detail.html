@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{{ txn.description }} &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-16">
+  <h1>{{ txn.description }}</h1>
+  <div>
+    <a class="btn btn-secondary" href="{{ url_for('transactions.edit', txn_id=txn.id) }}">Edit</a>
+    <form class="inline-form" method="post" action="{{ url_for('transactions.delete', txn_id=txn.id) }}"
+          onsubmit="return confirm('Delete this transaction?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger-outline" type="submit">Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="stat-label">Amount</div>
+      <div class="stat-value {% if txn.type.value == 'income' %}pos{% else %}neg{% endif %}">
+        {{ (txn.amount if txn.type.value == 'income' else -txn.amount)|money(g.current_user.currency) }}
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Type</div>
+      <div class="stat-value small"><span class="badge badge-{{ txn.type.value }}">{{ txn.type.value }}</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Date</div>
+      <div class="stat-value small">{{ txn.date|datefmt }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Category</div>
+      <div class="stat-value small">{{ txn.category.name if txn.category else '—' }}</div>
+    </div>
+  </div>
+  <table class="table">
+    <tbody>
+      <tr><th>Account</th><td>{{ txn.account.name }}</td></tr>
+      {% if txn.to_account %}
+      <tr><th>Transferred to</th><td>{{ txn.to_account.name }}</td></tr>
+      {% endif %}
+      {% if txn.notes %}
+      <tr><th>Notes</th><td>{{ txn.notes }}</td></tr>
+      {% endif %}
+      <tr><th>Created</th><td>{{ txn.created_at.strftime('%d %b %Y %H:%M') }} UTC</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

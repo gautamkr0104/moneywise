@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-16">
+  <h1>Transactions</h1>
+  <div>
+    <a class="btn btn-secondary" href="{{ url_for('transactions.csv_import') }}">Import CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('transactions.new_transaction') }}">+ New transaction</a>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <form method="get">
+    <div class="form-group">
+      {{ form.q.label }}
+      {{ form.q(class="form-control", placeholder="Search description or notes") }}
+    </div>
+    <div class="form-group">
+      {{ form.type.label }}
+      {{ form.type(class="form-control") }}
+    </div>
+    <div class="form-group">
+      {{ form.account.label }}
+      {{ form.account(class="form-control") }}
+    </div>
+    <div class="form-group">
+      {{ form.category.label }}
+      {{ form.category(class="form-control") }}
+    </div>
+    <div class="form-group">
+      {{ form.date_from.label }}
+      {{ form.date_from(class="form-control", type="date") }}
+    </div>
+    <div class="form-group">
+      {{ form.date_to.label }}
+      {{ form.date_to(class="form-control", type="date") }}
+    </div>
+    <div class="form-group">
+      {{ form.min_amount.label }}
+      {{ form.min_amount(class="form-control", step="0.01") }}
+    </div>
+    <div class="form-group">
+      {{ form.max_amount.label }}
+      {{ form.max_amount(class="form-control", step="0.01") }}
+    </div>
+    <div class="form-group">
+      {{ form.sort.label }}
+      {{ form.sort(class="form-control") }}
+    </div>
+    <div class="form-group">
+      {{ form.order.label }}
+      {{ form.order(class="form-control") }}
+    </div>
+    <div class="form-group">
+      <label>&nbsp;</label>
+      <button type="submit" class="btn btn-primary">Apply</button>
+      <a class="btn btn-secondary" href="{{ url_for('transactions.list_transactions') }}">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Description</th>
+        <th>Type</th>
+        <th>Category</th>
+        <th>Account</th>
+        <th class="num">Amount</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for txn in pagination.items %}
+      <tr>
+        <td>{{ txn.date|datefmt }}</td>
+        <td><a href="{{ url_for('transactions.detail', txn_id=txn.id) }}">{{ txn.description }}</a></td>
+        <td><span class="badge badge-{{ txn.type.value }}">{{ txn.type.value }}</span></td>
+        <td>{{ txn.category.name if txn.category else (txn.to_account.name if txn.to_account else '—') }}</td>
+        <td>{{ txn.account.name }}</td>
+        <td class="num {% if txn.type.value == 'income' %}amount-income{% else %}amount-expense{% endif %}">
+          {{ (txn.amount if txn.type.value == 'income' else -txn.amount)|money(g.current_user.currency) }}
+        </td>
+        <td class="text-right">
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('transactions.edit', txn_id=txn.id) }}">Edit</a>
+          <form class="inline-form" method="post" action="{{ url_for('transactions.delete', txn_id=txn.id) }}"
+                onsubmit="return confirm('Delete this transaction?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-danger-outline btn-sm" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty-state">No transactions match. <a href="{{ url_for('transactions.new_transaction') }}">Add one</a>.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="pagination">
+  {% if pagination.has_prev %}
+    <a href="{{ url_for('transactions.list_transactions', page=pagination.prev_num, **filters) }}">&laquo; Prev</a>
+  {% endif %}
+  {% for page_num in pagination.iter_pages() %}
+    {% if page_num %}
+      {% if page_num == pagination.page %}
+        <span class="current">{{ page_num }}</span>
+      {% else %}
+        <a href="{{ url_for('transactions.list_transactions', page=page_num, **filters) }}">{{ page_num }}</a>
+      {% endif %}
+    {% else %}
+      <span>&hellip;</span>
+    {% endif %}
+  {% endfor %}
+  {% if pagination.has_next %}
+    <a href="{{ url_for('transactions.list_transactions', page=pagination.next_num, **filters) }}">Next &raquo;</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<p class="muted small mt-16">{{ pagination.total }} transaction(s)</p>
+{% endblock %}

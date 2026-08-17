@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}MoneyWise{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a class="brand" href="{{ url_for('dashboard.index') }}">MoneyWise</a>
+      {% if g.current_user %}
+      <nav class="nav-links">
+        <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+        <a href="{{ url_for('transactions.list_transactions') }}">Transactions</a>
+        <a href="{{ url_for('accounts.list_accounts') }}">Accounts</a>
+        <a href="{{ url_for('budgets.list_budgets') }}">Budgets</a>
+        <a href="{{ url_for('recurring.list_recurring') }}">Recurring</a>
+        <a href="{{ url_for('reports.index') }}">Reports</a>
+        <a href="{{ url_for('categories.index') }}">Categories</a>
+        <a href="{{ url_for('settings.index') }}">Settings</a>
+      </nav>
+      <div class="nav-user">
+        <span class="nav-username">{{ g.current_user.username }}</span>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-link">Log out</button>
+        </form>
+      </div>
+      {% else %}
+      <nav class="nav-links">
+        <a href="{{ url_for('auth.login') }}">Log in</a>
+        <a href="{{ url_for('auth.register') }}">Register</a>
+      </nav>
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-area">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <div class="container">MoneyWise &middot; your money, tracked</div>
+  </footer>
+</body>
+</html>

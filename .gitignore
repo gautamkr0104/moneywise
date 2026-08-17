@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+
+# VS Code settings
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Project specific: Music files (often large or copyrighted)
+# Uncomment the line below if you want to keep your Music folder local only
+# lyrics printer/Music/
+
+# Python tooling
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment variables (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Flask instance folder (local SQLite database lives here)
+instance/
+*.db
+*.sqlite
+*.sqlite3

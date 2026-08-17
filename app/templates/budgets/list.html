@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Budgets &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-16">
+  <h1>Budgets</h1>
+  <a class="btn btn-primary" href="{{ url_for('budgets.new_budget', year=year, month=month) }}">+ New budget</a>
+</div>
+
+<div class="filter-bar">
+  <div class="flex-between">
+    <a class="btn btn-secondary" href="{{ url_for('budgets.list_budgets', year=prev_period.year, month=prev_period.month) }}">&laquo; {{ prev_period.strftime('%b %Y') }}</a>
+    <strong>{{ "%04d-%02d"|format(year, month) }}</strong>
+    <a class="btn btn-secondary" href="{{ url_for('budgets.list_budgets', year=next_period.year, month=next_period.month) }}">{{ next_period.strftime('%b %Y') }} &raquo;</a>
+  </div>
+</div>
+
+{% if rows %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th class="num">Budgeted</th>
+          <th class="num">Spent</th>
+          <th class="num">Remaining</th>
+          <th>Progress</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        {% set s = row.status %}
+        <tr>
+          <td>{{ row.budget.category.name }}</td>
+          <td class="num">{{ row.budget.amount|money(g.current_user.currency) }}</td>
+          <td class="num amount-expense">{{ s.spent|money(g.current_user.currency) }}</td>
+          <td class="num">{{ s.remaining|money(g.current_user.currency) }}</td>
+          <td>
+            <div class="progress">
+              <div class="progress-fill {{ s.level }}" style="width: {{ [s.percent_used, 100]|min }}%"></div>
+            </div>
+          </td>
+          <td>
+            <span class="badge badge-{{ s.level }}">
+              {% if s.level == 'ok' %}on track{% elif s.level == 'exceeded' %}exceeded{% else %}{{ '%.0f'|format(s.percent_used) }}% used{% endif %}
+            </span>
+          </td>
+          <td class="text-right">
+            <a class="btn btn-secondary btn-sm" href="{{ url_for('budgets.edit', budget_id=row.budget.id) }}">Edit</a>
+            <form class="inline-form" method="post" action="{{ url_for('budgets.delete', budget_id=row.budget.id) }}"
+                  onsubmit="return confirm('Delete this budget?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger-outline btn-sm" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <p class="muted">No budgets for {{ "%04d-%02d"|format(year, month) }}.</p>
+  <a class="btn btn-secondary" href="{{ url_for('budgets.new_budget', year=year, month=month) }}">Create your first budget</a>
+</div>
+{% endif %}
+
+{% if months_unbudgeted %}
+<div class="card">
+  <div class="card-title">Unbudgeted expense categories</div>
+  {% for category in months_unbudgeted %}
+  <span class="badge badge-muted">{{ category.name }}</span>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ account.name }} &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-16">
+  <h1>{{ account.name }}
+    {% if account.is_archived %}<span class="badge badge-muted">archived</span>{% endif %}
+  </h1>
+  <a class="btn btn-secondary" href="{{ url_for('accounts.edit', account_id=account.id) }}">Edit</a>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Current balance</div>
+    <div class="stat-value">{{ balance|money(account.currency) }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Starting balance</div>
+    <div class="stat-value">{{ account.starting_balance|money(account.currency) }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Type</div>
+    <div class="stat-value small">{{ account.type.value|replace('_', ' ') }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Currency</div>
+    <div class="stat-value small">{{ account.currency }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Recent activity</div>
+  {% if transactions %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Date</th><th>Description</th><th>Type</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+        {% for txn in transactions %}
+        <tr>
+          <td>{{ txn.date|datefmt }}</td>
+          <td><a href="{{ url_for('transactions.detail', txn_id=txn.id) }}">{{ txn.description }}</a></td>
+          <td>
+            {% if txn.type.value == 'transfer' %}
+              {% if txn.to_account_id == account.id %}transfer in{% else %}transfer out{% endif %}
+            {% else %}{{ txn.type.value }}{% endif %}
+          </td>
+          <td class="num {% if txn.type.value == 'income' or (txn.type.value == 'transfer' and txn.to_account_id == account.id) %}amount-income{% else %}amount-expense{% endif %}">
+            {{ txn.net_effect|money(account.currency) }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No transactions on this account yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

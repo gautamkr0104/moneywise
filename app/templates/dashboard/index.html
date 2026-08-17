@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-16">
+  <h1>Dashboard</h1>
+  <span class="muted small">{{ g.current_user.username }} &middot; {{ "%04d-%02d"|format(year, month) }}</span>
+</div>
+
+<div class="stat-grid">
+  <div class="stat">
+    <div class="stat-label">Total balance</div>
+    <div class="stat-value">{{ total_balance|money(g.current_user.currency) }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Income this month</div>
+    <div class="stat-value pos">{{ month_report.total_income|money(g.current_user.currency) }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Expenses this month</div>
+    <div class="stat-value neg">{{ month_report.total_expenses|money(g.current_user.currency) }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Savings this month</div>
+    <div class="stat-value {% if month_report.savings >= 0 %}pos{% else %}neg{% endif %}">{{ month_report.savings|money(g.current_user.currency) }}</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div>
+    <div class="card">
+      <div class="card-title">Top spending categories</div>
+      {% if top_categories %}
+      <table class="table">
+        <tbody>
+          {% for item in top_categories %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td class="num amount-expense">{{ item.amount|money(g.current_user.currency) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">No expenses recorded this month yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Recent transactions</div>
+      {% if recent_transactions %}
+      <table class="table">
+        <thead>
+          <tr><th>Date</th><th>Description</th><th>Category</th><th class="num">Amount</th></tr>
+        </thead>
+        <tbody>
+          {% for txn in recent_transactions %}
+          <tr>
+            <td>{{ txn.date|datefmt }}</td>
+            <td><a href="{{ url_for('transactions.detail', txn_id=txn.id) }}">{{ txn.description }}</a></td>
+            <td>{{ txn.category.name if txn.category else (txn.to_account.name if txn.to_account else '—') }}</td>
+            <td class="num {% if txn.type.value == 'income' %}amount-income{% else %}amount-expense{% endif %}">
+              {{ (txn.amount if txn.type.value == 'income' else -txn.amount)|money(g.current_user.currency) }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">No transactions yet. <a href="{{ url_for('transactions.new_transaction') }}">Add one</a>.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <div class="card-title">Accounts</div>
+      {% if accounts %}
+      <table class="table">
+        <thead><tr><th>Account</th><th class="num">Balance</th></tr></thead>
+        <tbody>
+          {% for account in accounts %}
+          <tr>
+            <td><a href="{{ url_for('accounts.detail', account_id=account.id) }}">{{ account.name }}</a></td>
+            <td class="num">{{ account.current_balance|money(account.currency) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">No accounts yet. <a href="{{ url_for('accounts.new_account') }}">Create one</a>.</p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Budgets this month</div>
+      {% if budgets %}
+      <table class="table">
+        <thead><tr><th>Category</th><th class="num">Used</th><th>Progress</th></tr></thead>
+        <tbody>
+          {% for row in budgets %}
+          <tr>
+            <td>
+              {{ row.budget.category.name }}
+              {% if row.status.level != 'ok' %}
+                <span class="badge badge-{{ row.status.level }}">
+                  {% if row.status.level == 'exceeded' %}exceeded{% else %}{{ '%.0f'|format(row.status.percent_used) }}%{% endif %}
+                </span>
+              {% endif %}
+            </td>
+            <td class="num">{{ row.status.spent|money(g.current_user.currency) }} / {{ row.budget.amount|money(g.current_user.currency) }}</td>
+            <td>
+              <div class="progress"><div class="progress-fill {{ row.status.level }}" style="width: {{ [row.status.percent_used, 100]|min }}%"></div></div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">No budgets for this month. <a href="{{ url_for('budgets.new_budget') }}">Create one</a>.</p>
+      {% endif %}
+    </div>
+
+    {% if over_budget %}
+    <div class="card">
+      <div class="card-title">Over budget</div>
+      {% for budget in over_budget %}
+      <div class="alert alert-error">Spent {{ budget.spent|money(g.current_user.currency) }} in <strong>{{ budget.category.name }}</strong> (budgeted {{ budget.amount|money(g.current_user.currency) }}).</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

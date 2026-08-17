@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Import preview &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-16">
+  <h1>Import preview</h1>
+  <div>
+    <form class="inline-form" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="confirm" value="1">
+      <button class="btn btn-primary" type="submit"
+              onclick="return confirm('Insert {{ preview.valid_count }} transaction(s)?');">
+        Confirm &amp; import {{ preview.valid_count }}
+      </button>
+    </form>
+    <form class="inline-form" method="post" action="{{ url_for('transactions.cancel_import') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-secondary" type="submit">Cancel</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Summary</div>
+  <p class="mb-16">
+    <strong>{{ preview.filename }}</strong> &middot; {{ preview.total_rows }} row(s) total:
+    <span class="badge badge-ok">{{ preview.valid_count }} ready</span>
+    <span class="badge badge-warn50">{{ preview.duplicate_rows|length }} duplicate(s)</span>
+    <span class="badge badge-exceeded">{{ preview.invalid_rows|length }} invalid</span>
+  </p>
+  {% if preview.default_account %}
+  <p class="small muted">Rows without an account will go to <strong>{{ preview.default_account.name }}</strong>.</p>
+  {% endif %}
+  {% if preview.new_categories %}
+  <p class="small muted">New categories to be created: <strong>{{ preview.new_categories|join(', ') }}</strong></p>
+  {% endif %}
+</div>
+
+{% if preview.valid_rows %}
+<div class="card">
+  <div class="card-title">Ready to import ({{ preview.valid_count }})</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Line</th><th>Date</th><th>Description</th><th>Type</th><th>Category</th><th>Account</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+        {% for row in preview.valid_rows %}
+        <tr>
+          <td>{{ row.line_number }}</td>
+          <td>{{ row.data.date }}</td>
+          <td>{{ row.data.description }}</td>
+          <td><span class="badge badge-{{ row.data.type.value }}">{{ row.data.type.value }}</span></td>
+          <td>{{ row.data.category_name }}</td>
+          <td>{{ row.data.account.name }}</td>
+          <td class="num">{{ row.data.amount|money(g.current_user.currency) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if preview.invalid_rows %}
+<div class="card">
+  <div class="card-title">Invalid rows ({{ preview.invalid_rows|length }}) - will be skipped</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Line</th><th>Data</th><th>Problems</th></tr></thead>
+      <tbody>
+        {% for row in preview.invalid_rows %}
+        <tr>
+          <td>{{ row.line_number }}</td>
+          <td class="small">{{ row.data.description if row.data else '—' }}</td>
+          <td class="small amount-expense">{{ row.errors|join('; ') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if preview.duplicate_rows %}
+<div class="card">
+  <div class="card-title">Duplicates ({{ preview.duplicate_rows|length }}) - will be skipped</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Line</th><th>Description</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+        {% for row in preview.duplicate_rows %}
+        <tr>
+          <td>{{ row.line_number }}</td>
+          <td>{{ row.data.description }}</td>
+          <td class="num">{{ row.data.amount|money(g.current_user.currency) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

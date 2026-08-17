@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Bad request &middot; MoneyWise{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1>400 &middot; Bad request</h1>
+  <p class="muted">The request could not be understood.</p>
+  <a class="btn btn-primary" href="{{ url_for('dashboard.index') }}">Back to dashboard</a>
+</div>
+{% endblock %}
